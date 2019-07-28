@@ -1,0 +1,69 @@
+{% extends 'layouts/main.html' %}
+
+{% block css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.1.3/css/bootstrap.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/1.10.19/css/dataTables.bootstrap4.min.css">
+<style>
+    .fak {
+        width: 1000px;
+        height: 500px;
+        border: 1px solid black;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+
+
+    <div class="fak" id="realtime"  ></div>
+    <p id="demo"></p>
+
+{% endblock %}
+
+
+{% block js %}
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script>
+
+        
+        var ws_schenme  = window.location.protocol == "https:" ? "wss" : "ws"
+        var ws_path = ws_schenme + "://" + window.location.host + "/ws/stream/"
+        var websocket = new WebSocket(ws_path)
+
+        var event_mouse = $('#realtime')
+        
+        // hasil dari boradcast websocket di tampilkan 
+        websocket.onmessage = function(e){
+            data = JSON.parse(e.data)
+            document.getElementById("demo").innerHTML = data.data;
+            console.log(data)
+        }
+
+        // connect dan post data di websocket 
+        websocket.onopen = function(e){
+            event_mouse.mousemove(function(e){
+                var x = event.clientX;
+                var y = event.clientY;
+                var coor = "X coords: " + x + ", Y coords: " + y;
+                websocket.send(coor)
+                document.getElementById("demo").innerHTML = coor;
+            })
+
+            event_mouse.mouseout(function(){
+                document.getElementById("demo").innerHTML = "";
+            })
+            
+            console.log("open", e)
+        }
+
+
+        websocket.onclose = function(e){
+            console.log("close",e)
+        }
+        
+        websocket.onerror = function(e){
+            console.log("error",e)
+        }
+</script>
+{% endblock %}

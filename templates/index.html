@@ -9,61 +9,69 @@
         height: 500px;
         border: 1px solid black;
     }
+
+    #spy_marker {
+        position:absolute;
+        background-color:blue;
+        width:8px;
+        height:8px;
+        left:0px;
+        top:0px;
+        border-radius: 50%;
+        display:none;
+    }
+
 </style>
 {% endblock %}
 
 {% block content %}
-
-
-
-    <div class="fak" id="realtime"  ></div>
-    <p id="demo"></p>
-
+    <div id="spy_marker"></div>
 {% endblock %}
+
+
 
 
 {% block js %}
 <script src="https://code.jquery.com/jquery-3.3.1.js"></script>
-<script>
+<script>        
+    var ws_schenme  = window.location.protocol == "https:" ? "wss" : "ws"
+    var ws_path = ws_schenme + "://" + window.location.host + "/ws/stream/"
+    var websocket = new WebSocket(ws_path)
 
-        
-        var ws_schenme  = window.location.protocol == "https:" ? "wss" : "ws"
-        var ws_path = ws_schenme + "://" + window.location.host + "/ws/stream/"
-        var websocket = new WebSocket(ws_path)
+    
+    var $spy_marker = $('#spy_marker');
 
-        var event_mouse = $('#realtime')
-        
-        // hasil dari boradcast websocket di tampilkan 
-        websocket.onmessage = function(e){
-            data = JSON.parse(e.data)
-            document.getElementById("demo").innerHTML = data.data;
-            console.log(data)
-        }
+    // hasil dari boradcast websocket di tampilkan 
+    websocket.onmessage = function(e){
+        data = JSON.parse(e.data)
+        $spy_marker.show().css({
+            left: (data.x - 2) + 'px',
+            top: (data.y - 2) + 'px'
+        });
+    }
 
-        // connect dan post data di websocket 
-        websocket.onopen = function(e){
-            event_mouse.mousemove(function(e){
-                var x = event.clientX;
-                var y = event.clientY;
-                var coor = "X coords: " + x + ", Y coords: " + y;
-                websocket.send(coor)
-                document.getElementById("demo").innerHTML = coor;
-            })
-
-            event_mouse.mouseout(function(){
-                document.getElementById("demo").innerHTML = "";
-            })
-            
-            console.log("open", e)
-        }
+    // connect dan post data di websocket 
+    websocket.onopen = function(e){
+        $(document).bind('mousemove',function(evt){
+            var x = evt.pageX;
+            var y = evt.pageY;
+            var coor = "x:" + x + "y:" + y;
+            websocket.send(JSON.stringify({
+                'x': x,
+                'y': y
+            }))
+        })
+        console.log("open", e)
+    }
 
 
-        websocket.onclose = function(e){
-            console.log("close",e)
-        }
-        
-        websocket.onerror = function(e){
-            console.log("error",e)
-        }
+    websocket.onclose = function(e){
+        console.log("close",e)
+    }
+    
+    websocket.onerror = function(e){
+        console.log("error",e)
+    }
 </script>
 {% endblock %}
+

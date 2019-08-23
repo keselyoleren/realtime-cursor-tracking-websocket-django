@@ -30,9 +30,7 @@ class cursor(WebsocketConsumer):
         # self.send(text_data)
     
     def cursor(self, event):
-        print(event)
         data = event['data']
-
-        self.send(text_data=json.dumps({
-            'data':data
-        }))
+        print(data)
+        self.send(data)
+        
